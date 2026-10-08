@@ -1,0 +1,21 @@
+@startuml
+actor 用户
+participant 前端
+participant "Flask后端 (/getTypeRate)" as Backend
+participant "数据库 (Job表)" as DB
+用户 -> 前端: 获取薪酬分析结果
+前端 -> Backend: 薪酬分析接口
+Backend -> Backend: 定义城市列表 [上海, 北京, 深圳, 广州, 苏州]
+loop 对每个城市
+    Backend -> DB: 查询 Job 表记录\n(city like '%城市%' 且 salary1 != 0)
+    DB --> Backend: 返回对应城市的职位记录
+    loop 遍历该城市的每个职位记录
+        Backend -> Backend: 提取数据\n(格式化学位、salary1、degree、salary0、职位名称、公司名称)
+        Backend -> Backend: 将提取的数据存入当前城市数据列表
+    end
+    Backend -> Backend: 将当前城市数据添加到总数据列表
+end
+Backend -> Backend: 组装响应数据 { datas: [...], labels: 城市列表 }
+Backend -> 前端: 返回数据
+前端 -> 用户: 展示薪酬分析结果
+@enduml

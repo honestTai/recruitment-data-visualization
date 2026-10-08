@@ -1,0 +1,26 @@
+@startuml
+actor 用户
+participant 前端
+participant getWords
+participant db.session
+participant jieba
+participant json
+
+用户 -> 前端 : 触发获取词云数据请求
+前端 -> getWords : 调用 getWords()
+getWords -> db.session : 查询 Job 表数据 (limit 5000)
+db.session -> getWords : 返回查询结果
+loop 遍历 records
+    getWords -> getWords : 拼接 welfare 字段文本
+end
+getWords -> jieba : 使用 jieba 进行分词
+jieba -> getWords : 返回分词结果
+loop 统计词频
+    getWords -> getWords : 计算词语出现次数
+end
+getWords -> getWords : 排序并过滤单字符词语
+getWords -> json : 转换为 JSON 格式
+json -> getWords : 返回 JSON 结果
+getWords -> 前端 : 返回词频数据
+前端 -> 用户 : 展示词云分析结果
+@enduml

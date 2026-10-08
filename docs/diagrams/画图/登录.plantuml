@@ -1,0 +1,18 @@
+@startuml
+actor 用户
+participant 前端
+participant Flask后端
+participant 数据库
+
+用户 -> 前端 : 输入用户名和密码
+前端 -> Flask后端 : 发送POST请求 (/login)
+Flask后端 -> 数据库 : 查询用户名和密码
+数据库 --> Flask后端 : 返回用户信息/验证结果
+alt 验证成功
+    Flask后端 -> Flask后端 : 存储session
+    Flask后端 -> 前端 : 返回成功响应 (用户信息)
+else 验证失败
+    Flask后端 -> 前端 : 返回错误信息
+end
+前端 -> 用户 : 显示登录结果
+@enduml

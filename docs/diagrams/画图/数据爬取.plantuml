@@ -1,0 +1,37 @@
+@startuml
+actor User
+participant "Spider" as Spider
+participant "Zhaopin API" as API
+database "Data Storage" as DB
+
+User -> Spider: 输入城市ID & 学历ID
+Spider -> API: 发送初始职位查询请求
+API -> Spider: 返回职位数据 (totalcount)
+
+alt totalcount <= 90
+    Spider -> API: 解析当前页职位数据
+    Spider -> DB: 存储职位信息
+else totalcount <= 270
+    loop 2-3 页
+        Spider -> API: 发送分页请求
+        API -> Spider: 返回职位数据
+        Spider -> DB: 存储职位信息
+    end
+else totalcount > 270
+    loop 按公司类型分类
+        Spider -> API: 请求特定公司类型数据
+        API -> Spider: 返回数据
+        alt totalcount > 270
+            loop 按公司规模分类
+                Spider -> API: 请求特定公司规模数据
+                API -> Spider: 返回数据
+                Spider -> DB: 存储职位信息
+            end
+        else
+            Spider -> DB: 存储职位信息
+        end
+    end
+end
+
+Spider -> User: 爬取完成，数据存储成功
+@enduml

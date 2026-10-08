@@ -1,0 +1,33 @@
+@startuml
+actor User
+participant Frontend
+participant Backend
+database "评分表 (tb_rate)" as RatingTable
+database "职位表 (Job)" as JobTable
+participant "推荐引擎 (ItemBasedCF)" as CF
+
+User -> Frontend : 打开推荐页面
+Frontend -> Backend : 请求推荐职位(userId)
+
+Backend -> CF : 实例化 ItemBasedCF()
+CF -> RatingTable : 读取评分数据（用户-职位-评分）
+CF -> CF : 构建训练集 trainSet\n构建测试集 testSet
+
+CF -> CF : 统计职位被评分次数\nmovie_popular[movie]++
+CF -> CF : 构建协同评分矩阵\nmovie_sim_matrix[m1][m2]++
+CF -> CF : 计算职位相似度\nsim(m1, m2) = count / sqrt(pop_m1 * pop_m2)
+
+Backend -> CF : 调用 recommend(userId)
+CF -> CF : 获取用户评分过的职位 watched_movies
+CF -> CF : 遍历 watched_movies：
+loop 对每个已评分职位
+    CF -> CF : 计算相关职位及权重\nrank[related] += sim * rating
+end
+CF -> Backend : 返回推荐列表 [(jobId, rate)...]
+
+Backend -> JobTable : 根据 jobId 查询职位信息（职位名、公司、薪资...）
+JobTable -> Backend : 返回职位详情
+
+Backend -> Frontend : 返回职位详情 + 推荐评分(JSON)
+Frontend -> User : 展示个性化推荐列表
+@enduml

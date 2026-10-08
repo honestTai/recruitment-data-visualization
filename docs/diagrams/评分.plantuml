@@ -1,0 +1,34 @@
+@startuml
+actor User
+participant Frontend
+participant FlaskServer
+database MySQL
+
+
+
+User -> Frontend : 请求获取评分 (userId, jobId)
+Frontend -> FlaskServer : GET /getRating?userId=&jobId=
+FlaskServer -> MySQL : SELECT * FROM rating WHERE uid=userId AND iid=jobId
+MySQL --> FlaskServer : rating or None
+alt 评分存在
+    FlaskServer --> Frontend : 返回评分数据 (score)
+else 未评分
+    FlaskServer --> Frontend : 返回 score=0
+end
+Frontend -> User : 显示评分
+
+
+User -> Frontend : 提交评分 (userId, job_id, score)
+Frontend -> FlaskServer : GET /rate?userId=&job_id=&score=
+FlaskServer -> MySQL : SELECT * FROM rating WHERE uid=userId AND iid=job_id
+alt 评分已存在
+    FlaskServer -> MySQL : UPDATE rating SET rate=score
+    note right: 更新评分
+else 新评分
+    FlaskServer -> MySQL : INSERT INTO rating (uid, iid, rate)
+    note right: 新增评分记录
+end
+FlaskServer -> MySQL : COMMIT
+FlaskServer --> Frontend : 返回操作结果
+Frontend -> User : 显示操作状态
+@enduml
